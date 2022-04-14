@@ -4,17 +4,19 @@
 swagger: "2.0"
 info:
   title: Emergency Social Network
-  description: This network is intended to use as a social connecting tool in case of emergency.
+  description: |
+    This network is intended to use as a social connecting tool in case of emergency.
+    This document only contains the APIs for Jimmy Wang's Iteration 4 features.
   version: 1.0.4-I4-JimmyWang
 basePath: /api
 schemes:
   - http
 paths:
-  /requestPosts:
+  /resourcePosts:
     get:
       tags:
-        - "requestPosts"
-      summary: Get all request posts matching the filter
+        - "resourcePosts"
+      summary: Get all resource posts matching the filter
       parameters:
         - in: body
           name: isRequest
@@ -54,16 +56,18 @@ paths:
         - application/json
       responses:
         200:
-          description: Find all request posts matching the condition.
+          description: Find all resource posts matching the condition.
           schema:
             type: array
             items:
               $ref: '#/definitions/RPSimpleVO'
+        400:
+          description: Invalid Filter Paramters.
         500:
           description: Server Error.
     post:
       tags:
-        - "requestPosts"
+        - "resourcePosts"
       summary: Create a new resource post
       parameters:
         - in: body
@@ -77,11 +81,11 @@ paths:
           description: The form does not match the VO restrictions.
         500:
           description: Server Error.
-  /requestPosts/mine:
+  /resourcePosts/mine:
     get:
       tags:
-        - "requestPosts"
-      summary: Get all request posts matching the filter that belongs to the logged in citizen
+        - "resourcePosts"
+      summary: Get all resource posts matching the filter that belongs to the logged in citizen
       parameters:
         - in: body
           name: category
@@ -110,45 +114,47 @@ paths:
         - application/json
       responses:
         200:
-          description: Find all request posts matching the condition.
+          description: Find all resource posts matching the condition.
           schema:
             type: array
             items:
               $ref: '#/definitions/RPSimpleVO'
+        400:
+          description: Invalid Filter Paramters.
         500:
           description: Server Error.
-  /requestPosts/{postId}:
+  /resourcePosts/{postId}:
     get:
       tags:
-        - "requestPosts"
-      summary: Get a request post information
+        - "resourcePosts"
+      summary: Get a resource post information
       parameters:
         - in: path
           name: postId
           type: string
           required: true
-          description: hexadecimal ID of the request post.
+          description: hexadecimal ID of the resource  post.
       produces:
         - application/json
       responses:
         200:
-          description: The Request Post is found.
+          description: The resource post is found.
           schema:
-            $ref: '#/definitions/RequestPostVO'
+            $ref: '#/definitions/ResourcePostVO'
         404:
-          description: The request post is not found.
+          description: The resource post is not found.
         500:
           description: Server Error.
     put:
       tags:
-        - "requestPosts"
-      summary: Update a request post
+        - "resourcePosts"
+      summary: Update a resource post
       parameters:
         - in: path
           name: postId
           type: string
           required: true
-          description: hexadecimal ID of the request post.
+          description: hexadecimal ID of the resource post.
         - in: body
           name: form
           required: true
@@ -158,17 +164,15 @@ paths:
         - text/plain
       responses:
         200:
-          description: The request is successfully updated.
+          description: The resource is successfully updated.
         400:
           description: The form does not match the VO restrictions.
-        404:
-          description: The post with corresponding postId is not found.
         500:
           description: Server Error.
-  /requestPosts/search:
+  /resourcePosts/search:
     get:
       tags:
-        - "requestPostsSearch"
+        - "resourcePostsSearch"
       summary: Search a list of resource posts that has the keyword in title / remarks
       parameters:
         - in: body
@@ -191,9 +195,22 @@ paths:
 
 
 definitions:
-  RequestPostVO:
+  LoginResponse:
     type: object
-    description: A full request post object used in RequestPost Use Case.
+    required:
+      - error
+    properties:
+      error:
+        type: boolean
+      redirect:
+        type: string
+        description: A link to redirect.
+      errMessage:
+        type: string
+        description: In case auth failed, the error message is written here.
+  ResourcePostVO:
+    type: object
+    description: A full resource post object used in ResourcePost Use Case.
     required:
       - id
       - title
@@ -248,7 +265,7 @@ definitions:
           The time when the post is updated.
   PostFormVO:
     type: object
-    description: A form schema used when posting / updating a request post.
+    description: A form schema used when posting / updating a resource post.
     required:
       - title
       - category
@@ -291,7 +308,7 @@ definitions:
   RPSimpleVO:
     type: object
     description: |
-      A simple request post object used in RequestPost Use Case.
+      A simple resource post object used in ResourcePost Use Case.
       This object is a simplified schema used when listing all posts.
     required:
       - id
