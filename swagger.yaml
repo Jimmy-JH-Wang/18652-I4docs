@@ -19,39 +19,10 @@ paths:
       summary: Get all resource posts matching the filter
       parameters:
         - in: body
-          name: isRequest
-          required: true
+          description: filter parameters
+          name: filter
           schema:
-            type: string
-            example: 0
-            description: |
-              Looking for resource supplies (0) or a resource requests(1)
-        - in: body
-          name: category
-          schema:
-            type: string
-            example: 1
-            description: |
-              List only the category of the resource provided.
-              Limited to "Food&Water"(1), "FirstAid"(2), "Tools&Equipment"(3).
-        - in: body
-          name: time
-          schema:
-            type: string
-            example: 1
-            description: |
-              List only the posts within some time range. Provided options are
-              (1) within 1 hour
-              (2) within 4 hours
-              (3) within 1 day
-              (4) within 3 days
-        - in: body
-          name: location
-          schema:
-            type: string
-            example: 94043
-            description:
-              List only the posts at some zip code.
+            $ref: '#/definitions/ResourcePostFilter'
       produces:
         - application/json
       responses:
@@ -81,48 +52,6 @@ paths:
           description: The form does not match the VO restrictions.
         500:
           description: Server Error.
-  /resourcePosts/mine:
-    get:
-      tags:
-        - "resourcePosts"
-      summary: Get all resource posts matching the filter that belongs to the logged in citizen
-      parameters:
-        - in: body
-          name: category
-          schema:
-            type: string
-            description: |
-              List only the category of the resource provided.
-              Limited to "Food&Water"(1), "FirstAid"(2), "Tools&Equipment"(3).
-        - in: body
-          name: time
-          schema:
-            type: string
-            description: |
-              List only the posts within some time range. Provided options are
-              (1) within 1 hour
-              (2) within 4 hours
-              (3) within 1 day
-              (4) within 3 days
-        - in: body
-          name: location
-          schema:
-            type: string
-            description: |
-              List only the posts at some zip code.
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Find all resource posts matching the condition.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/RPSimpleVO'
-        400:
-          description: Invalid Filter Paramters.
-        500:
-          description: Server Error.
   /resourcePosts/{postId}:
     get:
       tags:
@@ -148,7 +77,7 @@ paths:
     put:
       tags:
         - "resourcePosts"
-      summary: Update a resource post
+      summary: Update a resource post (Can only execute if it belongs to the logged in user)
       parameters:
         - in: path
           name: postId
@@ -167,6 +96,31 @@ paths:
           description: The resource is successfully updated.
         400:
           description: The form does not match the VO restrictions.
+        403:
+          description: The user is not authorized to update the post. (Only the owner can update it)
+        404:
+          description: The resource post with the corresponding id is not found.
+        500:
+          description: Server Error.
+    delete:
+      tags:
+        - "resourcePosts"
+      summary: Delete a resource post (Can only execute if it belongs to the logged in user)
+      parameters:
+        - in: path
+          name: postId
+          type: string
+          required: true
+          description: hexadecimal ID of the resource post.
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: The resource is successfully deleted.
+        403:
+          description: The user is not authorized to delete the post.
+        404:
+          description: The resource post with the corresponding id is not found.
         500:
           description: Server Error.
   /resourcePosts/search:
@@ -195,19 +149,39 @@ paths:
 
 
 definitions:
-  LoginResponse:
-    type: object
-    required:
-      - error
+  ResourcePostFilter:
+    description: Filter Parameters for GET /researchPost
     properties:
-      error:
-        type: boolean
-      redirect:
+      isRequest:
         type: string
-        description: A link to redirect.
-      errMessage:
+        example: 0
+        description: |
+            Looking for resource supplies (0) or a resource requests(1)
+      category:
         type: string
-        description: In case auth failed, the error message is written here.
+        example: 1
+        description: |
+          List only the category of the resource provided.
+          Limited to "Food&Water"(1), "FirstAid"(2), "Tools&Equipment"(3).
+      time:
+        type: string
+        example: 1
+        description: |
+          List only the posts within some time range. Provided options are
+          (1) within 1 hour
+          (2) within 4 hours
+          (3) within 1 day
+          (4) within 3 days
+      location:
+        type: string
+        example: 94043
+        description: |
+          List only the posts at some zip code.
+      isMine:
+        type: string
+        example: 0
+        description: |
+          Any value will result in the search filters only my posts (with inactive ones).
   ResourcePostVO:
     type: object
     description: A full resource post object used in ResourcePost Use Case.
@@ -345,6 +319,10 @@ definitions:
         type: integer
         description: |
           Describe the quantity of the resource provided / requested.
+      unit:
+        type: string
+        description: |
+          The unit of that quantity.
       zipcode:
         type: integer
         description: |
